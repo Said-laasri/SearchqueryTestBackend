@@ -1,25 +1,32 @@
-// server.js
 const express = require('express');
-const searchRoutes = require('./routes/searchRoutes');
+const searchRoute = require('./routes/search');
+const db = require('./db');
+require('dotenv').config();
+
+const cors = require('cors');
 
 const app = express();
-const port = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(express.json());
-// Consider adding CORS middleware if needed
-// const cors = require('cors');
-// app.use(cors());
+app.use(cors());
+app.use('/api/search', searchRoute);
 
-// Routes
-app.use('/', searchRoutes);
-
-// Basic Root Route
-app.get('/', (req, res) => {
-    res.send('Live Search Backend API is running!');
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });
 
-// Start Server
-app.listen(port, () => {
-    console.log(`Server listening at http://localhost:${port}`);
-});
+
+(async () => {
+    const isConnected = await db.checkConnection();
+    if (!isConnected) {
+      console.error('❌ Could not connect to database. Exiting...');
+      process.exit(1);
+    } else {
+      console.log('✅ Database connected successfully!');
+    }
+  
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  })();
+  
