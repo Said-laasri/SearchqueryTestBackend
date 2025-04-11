@@ -1,0 +1,69 @@
+services:
+  # Node.js Application Service
+  app:
+    container_name: live_search_app
+    build: . # Instructs Docker Compose to build the image from the Dockerfile in the current directory
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3001}:${PORT:-3001}" # Map host port to container port (reads from .env or defaults to 3001)
+    environment:
+      # Pass database connection details to the Node.js app
+      # IMPORTANT: DB_HOST is the service name 'db' defined below
+      DB_HOST: db
+      DB_USER: ${DB_USER:-user} # Use value from .env or default to 'user'
+      DB_PASSWORD: ${DB_PASSWORD:-password} # Use value from .env or default to 'password'
+      DB_DATABASE: ${DB_DATABASE:-searchdb} # Use value from .env or default to 'searchdb'
+      DB_PORT: 5432 # Standard PostgreSQL port inside the container network
+      PORT: ${PORT:-3001} # Port the Node.js app listens on inside the container
+      NODE_ENV: ${NODE_ENV:-development}
+    volumes:
+      # Mount local code into the container for development (reflects changes without rebuilding)
+      # Use delegated for potential performance improvements on macOS/Windows
+      - .:/app:delegated
+      # Mount a volume for node_modules to prevent host node_modules from overwriting container's
+      - /app/node_modules
+    depends_on:
+      db:
+        condition: service_healthy # Wait for the db service to be healthy before starting app
+    networks:
+      - search_network
+
+  # PostgreSQL Database Service
+  db:
+    container_name: postgres_db
+    # image: postgres:15 # <--- Comment out or delete this line
+    image: postgres:15-alpine # <--- Use the Alpine version instead
+    platform: linux/amd64
+    restart: always
+    # ... rest of the db service ..
+    environment:
+      # These variables are used by the postgres image to initialize the DB
+      POSTGRES_USER: ${DB_USER:-user} # Must match DB_USER used by the app
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password} # Must match DB_PASSWORD used by the app
+      POSTGRES_DB: ${DB_DATABASE:-searchdb} # Must match DB_DATABASE used by the app
+    volumes:
+      # Persist database data using a named volume
+      - postgres_data:/var/lib/postgresql/data
+      # Mount initialization scripts (see step 5 below)
+      - ./init-db:/docker-entrypoint-initdb.d
+    ports:
+      # Optionally map host port 5433 to container port 5432 for direct DB access from host if needed
+      - "5433:5432"
+    healthcheck:
+      # Check if Postgres is ready to accept connections
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-user} -d ${DB_DATABASE:-searchdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - search_network
+
+# Define named volumes
+volumes: # <--- CORRECTED: Top-level key, same indentation as 'services'
+  postgres_data: # <--- Indented under 'volumes'
+    # Optional comment: Persists database data
+
+# Define Networks
+networks: # <--- CORRECTED: Top-level key, same indentation as 'services'
+  search_network: # <--- Indented under 'networks'
+    driver: bridge # <--- Indented under 'search_network'
