@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Live Search Landing Page</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+    }
+
+    .search-container {
+      position: relative;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    #searchInput {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    #searchResults {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background-color: #f9f9f9;
+      border: 1px solid #ccc;
+      border-top: none;
+      border-bottom-left-radius: 5px;
+      border-bottom-right-radius: 5px;
+      margin-top: 5px;
+      z-index: 10;
+      display: none;
+    }
+
+    #searchResults ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    #searchResults li {
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    #searchResults li:hover {
+      background-color: #eee;
+    }
+
+    #searchResults li span {
+      font-size: 0.9em;
+      color: #777;
+      margin-left: 10px;
+    }
+
+    #noResults {
+      padding: 10px;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <div class="search-container">
+    <input type="text" id="searchInput" placeholder="Search items...">
+    <div id="searchResults">
+      <ul id="resultsList"></ul>
+      <p id="noResults" style="display: none;">No results found.</p>
+    </div>
+  </div>
+
+  <script>
+    const searchInput = document.getElementById('searchInput');
+    const searchResultsDiv = document.getElementById('searchResults');
+    const resultsList = document.getElementById('resultsList');
+    const noResultsMessage = document.getElementById('noResults');
+    let searchTimeout;
+
+    searchInput.addEventListener('input', () => {
+      const query = searchInput.value.trim();
+
+      clearTimeout(searchTimeout);
+
+      if (query) {
+        searchTimeout = setTimeout(async () => {
+          try {
+            const response = await fetch(`http://localhost:3000/api/search?q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+
+            resultsList.innerHTML = '';
+            if (Array.isArray(data) && data.length > 0) {
+              data.forEach(item => {
+                const listItem = document.createElement('li');
+                listItem.textContent = item.name;
+
+                const description = document.createElement('span');
+                description.textContent = item.description || '';
+                listItem.appendChild(description);
+
+                resultsList.appendChild(listItem);
+              });
+              noResultsMessage.style.display = 'none';
+              searchResultsDiv.style.display = 'block';
+            } else {
+              noResultsMessage.style.display = 'block';
+              searchResultsDiv.style.display = 'block';
+            }
+          } catch (error) {
+            console.error('Error fetching results:', error);
+            resultsList.innerHTML = '<li class="error">Network or server error.</li>';
+            noResultsMessage.style.display = 'none';
+            searchResultsDiv.style.display = 'block';
+          }
+        }, 300);
+      } else {
+        searchResultsDiv.style.display = 'none';
+        resultsList.innerHTML = '';
+        noResultsMessage.style.display = 'none';
+      }
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!event.target.closest('.search-container')) {
+        searchResultsDiv.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
