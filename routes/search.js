@@ -11,10 +11,10 @@ router.get('/', async (req, res) => {
     const result = await db.query(
       `SELECT id, name, description
        FROM items
-       WHERE searchable @@ plainto_tsquery($1)
-       ORDER BY ts_rank(searchable, plainto_tsquery($1)) DESC
+       WHERE name ILIKE $1 OR description ILIKE $1
+       ORDER BY name ASC
        LIMIT 20`,
-      [searchQuery]
+      [`%${searchQuery}%`]
     );
 
     res.json(result.rows);

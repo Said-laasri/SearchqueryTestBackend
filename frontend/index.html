@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Live Search Landing Page</title>
   <style>
     body {
@@ -14,6 +15,11 @@
       position: relative;
       max-width: 400px;
       margin: 0 auto;
+    }
+
+    #searchResults {
+      max-height: 300px;
+      overflow-y: auto;
     }
 
     #searchInput {
@@ -67,6 +73,7 @@
     }
   </style>
 </head>
+
 <body>
   <div class="search-container">
     <input type="text" id="searchInput" placeholder="Search items...">
@@ -91,8 +98,10 @@
       if (query) {
         searchTimeout = setTimeout(async () => {
           try {
-            const response = await fetch(`https://searchquery-test-backend.vercel.app/api/search?q=${encodeURIComponent(query)}`);
+            const response = await fetch(`http://localhost:3000/api/search?q=${encodeURIComponent(query)}`);
             const data = await response.json();
+            const loadingIndicator = document.createElement('li');
+            loadingIndicator.textContent = 'Loading...';
 
             resultsList.innerHTML = '';
             if (Array.isArray(data) && data.length > 0) {
@@ -133,4 +142,5 @@
     });
   </script>
 </body>
+
 </html>
