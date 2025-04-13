@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
        WHERE name ILIKE $1 OR description ILIKE $1
        ORDER BY name ASC
        LIMIT 20`,
-      [`%${searchQuery}%`]
+      [`${searchQuery}%`] // Removed the leading '%'
     );
 
     res.json(result.rows);

@@ -1,7 +1,7 @@
-const express = require('express');
-const searchRoute = require('./routes/search');
-const db = require('./db');
 require('dotenv').config();
+const express = require('express');
+const searchRoute = require('../routes/search');
+const db = require('../db/index');
 const cors = require('cors');
 
 const app = express();
