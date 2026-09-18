@@ -1,3 +1,4 @@
+// COMPATRA: this call may be affected by a stripe API change (endpoint_removed: DELETE /v1/charges/{charge}) — review before relying on this.
 require('dotenv').config();
 const express = require('express');
 const searchRoute = require('./routes/search');
